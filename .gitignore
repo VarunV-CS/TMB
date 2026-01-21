@@ -1,0 +1,34 @@
+# Dependencies
+/GetItDone/node_modules
+/UserAPI/node_modules
+
+# Environment files
+/GetItDone/.env*
+/UserAPI/.env*
+
+# Build artifacts
+/GetItDone/build
+/GetItDone/dist
+/UserAPI/dist
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+npm-error.log*
+
+# OS and Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.class
