@@ -1,13 +1,54 @@
 import { useState, useEffect } from 'react';
+import api from '../services/api';
 import './Dashboard.css';
 
-function Dashboard({ user, onLogout }) {
+function Dashboard() {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [tasks, setTasks] = useState([
-    { id: 1, title: 'Welcome to GetItDone! 🎉', completed: false },
+    { id: 1, title: 'Get It Done!', completed: false },
     { id: 2, title: 'Try adding your first task', completed: false },
     { id: 3, title: 'Complete tasks to stay organized', completed: false }
   ]);
   const [newTask, setNewTask] = useState('');
+
+  // Fetch user data from API service on mount
+  useEffect(() => {
+    const fetchUserData = () => {
+      try {
+        const userData = api.getUser();
+        if (userData) {
+          setUser(userData);
+        } else {
+          // Fallback: create user from token if available
+          const token = api.getToken();
+          if (token) {
+            setUser({
+              name: 'User',
+              email: 'user@example.com'
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Handle logout - clear all authentication data and redirect
+  const handleLogout = () => {
+    // Call API logout to clear tokens
+    api.logout();
+    // Clear any additional localStorage items
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('user');
+    // Redirect to login page
+    window.location.href = '/';
+  };
 
   const addTask = (e) => {
     e.preventDefault();
@@ -30,18 +71,40 @@ function Dashboard({ user, onLogout }) {
   const completedCount = tasks.filter(task => task.completed).length;
   const totalCount = tasks.length;
 
+  // Show loading state while fetching user data
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  // Handle case where user data is missing
+  if (!user) {
+    return (
+      <div className="dashboard-error">
+        <p>Unable to load user data. Please log in again.</p>
+        <button onClick={handleLogout} className="logout-btn">
+          Return to Login
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
         <div className="header-left">
-          <h1 className="dashboard-title">GetItDone</h1>
+          <h1 className="dashboard-title">Get It Done</h1>
         </div>
         <div className="header-right">
           <div className="user-info">
             <span className="user-avatar">👤</span>
             <span className="user-name">{user.name}</span>
           </div>
-          <button onClick={onLogout} className="logout-btn">
+          <button onClick={handleLogout} className="logout-btn">
             Logout
           </button>
         </div>
@@ -106,7 +169,7 @@ function Dashboard({ user, onLogout }) {
                     className="delete-task-btn"
                     title="Delete task"
                   >
-                    🗑️
+                    ❌
                   </button>
                 </div>
               ))

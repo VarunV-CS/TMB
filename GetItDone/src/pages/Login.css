@@ -108,6 +108,17 @@
   margin-left: 4px;
 }
 
+.form-error {
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
 .forgot-password {
   text-align: right;
   margin-top: -10px;

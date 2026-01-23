@@ -1,4 +1,6 @@
 /* App.css - Minimal styles since Login component has its own styling */
+@import "tailwindcss";
+
 #root {
   width: 100%;
   min-height: 100vh;
