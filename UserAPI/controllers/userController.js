@@ -1,12 +1,34 @@
+
 import User from "../models/User.js";
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
+import bcrypt from "bcryptjs";
 import config from '../config/index.js';
 
 // Helper function to generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, config.JWT_SECRET, {
     expiresIn: config.JWT_EXPIRES_IN
+  });
+};
+
+// Helper function to set JWT cookie
+const setTokenCookie = (res, token) => {
+  const cookieOptions = {
+    httpOnly: true, // Prevents XSS attacks - JS cannot read the cookie
+    secure: config.COOKIE_SECURE, // Only send over HTTPS
+    sameSite: config.COOKIE_SAME_SITE, // CSRF protection
+    maxAge: config.COOKIE_MAX_AGE // Cookie expiration in milliseconds
+  };
+  
+  res.cookie(config.COOKIE_NAME, token, cookieOptions);
+};
+
+// Helper function to clear JWT cookie
+const clearTokenCookie = (res) => {
+  res.clearCookie(config.COOKIE_NAME, {
+    httpOnly: true,
+    secure: config.COOKIE_SECURE,
+    sameSite: config.COOKIE_SAME_SITE
   });
 };
 
@@ -58,16 +80,22 @@ export const createUser = async (req, res) => {
     return res.status(400).json({ message: "Please provide a valid email address" });
   }
   
+          console.log('@something jnd', req.body);
+
   // Validate password strength
-  if (password.length < 6) {
-    return res.status(400).json({ message: "Password must be at least 6 characters long" });
-  }
+  
   
   try {
     // Check if user with email already exists
     const existingUser = await User.findOne({ Email: Email });
     if (existingUser) {
       return res.status(400).json({ message: "User with this email already exists" });
+    }
+    
+    // Check if username already exists
+    const existingUsername = await User.findOne({ Username: Username });
+    if (existingUsername) {
+      return res.status(400).json({ message: "Username is already taken" });
     }
     
     // Hash password
@@ -78,21 +106,30 @@ export const createUser = async (req, res) => {
     const user = new User({
       Username,
       Email,
-      password: hashedPassword
+      password
     });
     
+    console.log('@something jnd', password);
+
     const savedUser = await user.save();
     
     // Generate token for the new user
     const token = generateToken(savedUser._id);
     
+    // Set token in HTTP-only cookie
+    setTokenCookie(res, token);
+    
+    // Save token to user document in database
+    await User.findByIdAndUpdate(savedUser._id, { token });
+    
+    // Return user data and token (token also in body for backward compatibility)
     res.status(201).json({
       success: true,
       token,
       user: {
         id: savedUser._id,
         Username: savedUser.Username,
-        email: savedUser.Email
+        Email: savedUser.Email
       }
     });
   } catch (error) {
@@ -110,6 +147,19 @@ export const updateUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid user ID" });
     }
     */
+    
+    // If username is being updated, check if it already exists
+    if (req.body.Username) {
+      const existingUsername = await User.findOne({ 
+        Username: req.body.Username,
+        _id: { $ne: req.params.id } // Exclude current user
+      });
+      
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username is already taken" });
+      }
+    }
+    
     const updatedUser = await User.findOneAndUpdate(
       { id: req.params.id },
       // { id: userId },
@@ -174,17 +224,21 @@ export const login = async (req, res) => {
     // Generate token
     const token = generateToken(user._id);
     
+    // Set token in HTTP-only cookie
+    setTokenCookie(res, token);
+    
     // Save token to user document in database
     await User.findByIdAndUpdate(user._id, { token });
     
-    // Return user data and token
+    // Return user data and token (token also in body for backward compatibility)
     res.json({
       success: true,
       token,
       user: {
-        id: user._id,
+        id: user._id.toString(),
+        _id: user._id.toString(),
         Username: user.Username,
-        email: user.Email
+        Email: user.Email
       }
     });
   } catch (error) {
@@ -210,9 +264,23 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
     
+    // Check if username already exists
+    const existingUsername = await User.findOne({ Username: Username });
+    
+    if (existingUsername) {
+      return res.status(400).json({ message: 'Username is already taken' });
+    }
+    
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    //here
+    if (password.length < 6) {
+    return res.status(400).json({ message: "Password must be at least 6 characters long" });
+        // console.log('@something jnd', req.body);
+
+  }
     
     // Create user
     const user = new User({
@@ -227,17 +295,21 @@ export const register = async (req, res) => {
     // Generate token
     const token = generateToken(user._id);
     
+    // Set token in HTTP-only cookie
+    setTokenCookie(res, token);
+    
     // Save token to user document in database
     await User.findByIdAndUpdate(user._id, { token });
     
-    // Return user data and token
+    // Return user data and token (token also in body for backward compatibility)
     res.status(201).json({
       success: true,
       token,
       user: {
-        id: user._id,
+        id: user._id.toString(),
+        _id: user._id.toString(),
         Username: user.Username,
-        email: user.Email
+        Email: user.Email
       }
     });
   } catch (error) {
@@ -262,11 +334,14 @@ export const getMe = async (req, res) => {
   }
 };
 
-// LOGOUT user - clears token from database
+// LOGOUT user - clears token from database and cookie
 export const logout = async (req, res) => {
   try {
     // Clear the token from the user document
     await User.findByIdAndUpdate(req.user.id, { token: null });
+    
+    // Clear the JWT cookie
+    clearTokenCookie(res);
     
     res.json({
       success: true,

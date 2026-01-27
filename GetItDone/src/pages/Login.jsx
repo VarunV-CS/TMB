@@ -94,17 +94,23 @@ function Login() {
               email: formData.email,
               name: formData.email.split('@')[0]
             };
-            // User with same Username need to be stopped
-
-
-
-
-
+            // Ensure user data has the correct structure
+            const userToStore = {
+              id: userData.id || response.user?._id,
+              name: userData.Username || userData.name || formData.email.split('@')[0],
+              email: userData.Email || userData.email || formData.email
+            };
             
-            // Store in localStorage for persistence
+            // Store token and user data using api service
+            if (response.token) {
+              api.setToken(response.token);
+            }
+            api.setUser(userToStore);
+            
+            // Set isAuthenticated flag for backward compatibility
             localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('user', JSON.stringify(userData));
-            console.log('Login successful:', userData);
+            
+            console.log('Login successful:', userToStore);
             
             // Navigate to dashboard
             navigate('/dashboard');
@@ -126,10 +132,23 @@ function Login() {
               email: formData.email
             };
             
-            // Store in localStorage for persistence
+            // Ensure user data has the correct structure
+            const userToStore = {
+              id: userData.id || response.user?._id,
+              name: userData.Username || userData.name || formData.name,
+              email: userData.Email || userData.email || formData.email
+            };
+            
+            // Store token and user data using api service
+            if (response.token) {
+              api.setToken(response.token);
+            }
+            api.setUser(userToStore);
+            
+            // Set isAuthenticated flag for backward compatibility
             localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('user', JSON.stringify(userData));
-            console.log('Registration successful:', userData);
+            
+            console.log('Registration successful:', userToStore);
             
             // Navigate to dashboard
             navigate('/dashboard');
@@ -152,9 +171,8 @@ function Login() {
   const handleLogout = () => {
     // Call API logout to clear tokens
     api.logout();
-    // Clear any additional localStorage items
+    // Clear isAuthenticated flag
     localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('user');
     setFormData({
       name: '',
       email: '',
@@ -209,6 +227,8 @@ function Login() {
               className={errors.email ? 'error' : ''}
               disabled={isLoading}
             />
+            {/* //add validation to Login */}
+
             {errors.email && <span className="error-message">{errors.email}</span>}
           </div>
 

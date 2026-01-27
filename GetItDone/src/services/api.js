@@ -1,6 +1,7 @@
 /**
  * API Service for UserAPI Backend Integration
  * Handles authentication and user data operations
+ * Supports both cookie-based and localStorage-based authentication
  */
 
 // API Base URL configuration
@@ -10,8 +11,13 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000
 const TOKEN_KEY = 'authToken';
 const USER_KEY = 'user';
 
+// Cookie name (must match backend config)
+const COOKIE_NAME = 'authToken';
+
 /**
- * Store authentication token in localStorage
+ * Store authentication token in HTTP-only cookie (via backend)
+ * This is handled by the backend during login/register
+ * We also store in localStorage for backward compatibility
  * @param {string} token - JWT token from backend
  */
 export const setToken = (token) => {
@@ -90,6 +96,8 @@ export const isTokenValid = () => {
 
 /**
  * Helper function to make authenticated API requests
+ * Note: With cookie-based auth, the Authorization header is optional
+ * The cookie is automatically sent by the browser with credentials: 'include'
  * @param {string} endpoint - API endpoint
  * @param {object} options - Fetch options
  * @returns {Promise<object>} Response data
@@ -99,6 +107,7 @@ const authenticatedRequest = async (endpoint, options = {}) => {
   
   const config = {
     ...options,
+    credentials: 'include', // Important: Include cookies in requests
     headers: {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -133,6 +142,7 @@ export const login = async (email, password) => {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include', // Important: Include cookies
       body: JSON.stringify({ email: email.toLowerCase().trim(), password }),
     });
 
@@ -143,13 +153,16 @@ export const login = async (email, password) => {
 
     const data = await response.json();
     
-    // Store token and user data
+    // Store token and user data for backward compatibility
     if (data.token) {
       setToken(data.token);
     }
     if (data.user) {
       setUser(data.user);
     }
+    
+    // Set isAuthenticated flag for backward compatibility
+    localStorage.setItem('isAuthenticated', 'true');
     
     return data;
   } catch (error) {
@@ -173,6 +186,7 @@ export const register = async (userData) => {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include', // Important: Include cookies
       body: JSON.stringify(userData),
     });
 
@@ -183,13 +197,16 @@ export const register = async (userData) => {
 
     const data = await response.json();
     
-    // Store token and user data immediately
+    // Store token and user data for backward compatibility
     if (data.token) {
       setToken(data.token);
     }
     if (data.user) {
       setUser(data.user);
     }
+    
+    // Set isAuthenticated flag for backward compatibility
+    localStorage.setItem('isAuthenticated', 'true');
     
     return data;
   } catch (error) {
@@ -199,11 +216,27 @@ export const register = async (userData) => {
 };
 
 /**
- * Logout user - clear all authentication data
+ * Logout user - clear all authentication data and cookies
  */
-export const logout = () => {
-  removeToken();
-  removeUser();
+export const logout = async () => {
+  try {
+    // Call API logout to clear tokens on server and cookies
+    await fetch(`${API_BASE_URL}/api/users/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Important: Include cookies so server can clear them
+    });
+  } catch (error) {
+    console.error('Logout API error:', error);
+    // Continue with local cleanup even if API call fails
+  } finally {
+    // Clear all local authentication data
+    removeToken();
+    removeUser();
+    localStorage.removeItem('isAuthenticated');
+  }
 };
 
 /**
@@ -286,6 +319,110 @@ export const refreshUserData = async () => {
   }
 };
 
+
+/**
+ * TASK FUNCTIONS
+ */
+
+/**
+ * Get all tasks for the current user
+ * @param {object} options - Query options
+ * @param {boolean} options.completed - Filter by completion status
+ * @param {string} options.priority - Filter by priority
+ * @param {string} options.search - Search in title
+ * @param {string} options.sortBy - Field to sort by
+ * @param {string} options.sortOrder - 'asc' or 'desc'
+ * @returns {Promise<array>} Array of tasks
+ */
+export const getTasks = async (options = {}) => {
+  const params = new URLSearchParams();
+  if (options.completed !== undefined) params.append('completed', options.completed);
+  if (options.priority) params.append('priority', options.priority);
+  if (options.search) params.append('search', options.search);
+  if (options.sortBy) params.append('sortBy', options.sortBy);
+  if (options.sortOrder) params.append('sortOrder', options.sortOrder);
+  
+  const queryString = params.toString();
+  const endpoint = queryString ? `/api/tasks?${queryString}` : '/api/tasks';
+  
+  return authenticatedRequest(endpoint);
+};
+
+/**
+ * Get task statistics for the current user
+ * @returns {Promise<object>} Task statistics
+ */
+export const getTaskStats = async () => {
+  return authenticatedRequest('/api/tasks/stats');
+};
+
+/**
+ * Add a new task for the current user
+ * @param {string} title - Task title
+ * @param {string} description - Task description (optional)
+ * @param {string} priority - Task priority (optional)
+ * @param {Date} dueDate - Task due date (optional)
+ * @returns {Promise<object>} Created task
+ */
+export const addTask = async (title, description = '', priority = 'medium', dueDate = null) => {
+  return authenticatedRequest('/api/tasks', {
+    method: 'POST',
+    body: JSON.stringify({ title, description, priority, dueDate }),
+  });
+};
+
+/**
+ * Update a task
+ * @param {string} taskId - Task ID
+ * @param {object} taskData - Updated task data
+ * @param {string} taskData.title - Task title
+ * @param {string} taskData.description - Task description
+ * @param {boolean} taskData.completed - Completion status
+ * @param {string} taskData.priority - Task priority
+ * @param {Date} taskData.dueDate - Task due date
+ * @returns {Promise<object>} Updated task
+ */
+export const updateTask = async (taskId, taskData) => {
+  return authenticatedRequest(`/api/tasks/${taskId}`, {
+    method: 'PUT',
+    body: JSON.stringify(taskData),
+  });
+};
+
+/**
+ * Delete a task
+ * @param {string} taskId - Task ID
+ * @returns {Promise<object>} Deletion confirmation
+ */
+export const deleteTask = async (taskId) => {
+  return authenticatedRequest(`/api/tasks/${taskId}`, {
+    method: 'DELETE',
+  });
+};
+
+/**
+ * Get a single task by ID
+ * @param {string} taskId - Task ID
+ * @returns {Promise<object>} Task data
+ */
+export const getTaskById = async (taskId) => {
+  return authenticatedRequest(`/api/tasks/${taskId}`);
+};
+
+/**
+ * Replace all tasks (for syncing)
+ * @param {array} tasks - Array of tasks with structure { title, description, completed, priority, dueDate, createdAt }
+ * @returns {Promise<object>} Updated tasks
+ */
+export const replaceTasks = async (tasks) => {
+  return authenticatedRequest('/api/tasks', {
+    method: 'PUT',
+    body: JSON.stringify({ tasks }),
+  });
+};
+
+
+
 export default {
   // Authentication
   login,
@@ -315,5 +452,14 @@ export default {
   // Utilities
   getApiBaseUrl,
   refreshUserData,
+  
+  // Task functions
+  getTasks,
+  getTaskStats,
+  getTaskById,
+  addTask,
+  updateTask,
+  deleteTask,
+  replaceTasks,
 };
 

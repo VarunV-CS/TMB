@@ -106,10 +106,27 @@
   text-align: center;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
+  border: 3px solid #667eea;
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
+}
+
+.stat-card:nth-child(1) {
+  border-color: #f9f955;
+}
+
+.stat-card:nth-child(2) {
+  border-color: #f59e0b;
+}
+
+.stat-card:nth-child(3) {
+  border-color: #3b82f6;
+}
+
+.stat-card:nth-child(4) {
+  border-color: #10b981;
 }
 
 .stat-number {
@@ -148,7 +165,17 @@
 .add-task-form {
   display: flex;
   gap: 15px;
-  margin-bottom: 30px;
+  margin-bottom: 15px;
+}
+
+.task-error {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  border-left: 4px solid #dc2626;
 }
 
 .task-input {
@@ -186,6 +213,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-bottom: 40px;
 }
 
 .no-tasks {
@@ -200,23 +228,58 @@
   align-items: center;
   gap: 15px;
   padding: 20px;
-  background: #f8f9fa;
+  background: white;
   border-radius: 12px;
   transition: all 0.3s ease;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
 .task-item:hover {
-  background: #f0f2f5;
-  transform: translateX(5px);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
-.task-item.completed {
+.task-item.task-pending {
+  border-left: 4px solid #f59e0b;
+}
+
+.task-item.task-in_progress {
+  border-left: 4px solid #3b82f6;
+}
+
+.task-item.task-completed {
   opacity: 0.7;
+  border-left: 4px solid #10b981;
 }
 
-.task-item.completed .task-title {
+.task-item.task-completed .task-title {
   text-decoration: line-through;
   color: #888;
+}
+
+/* Task Status Badge */
+.task-status-badge {
+  font-size: 1rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #e5e7eb;
+  min-width: 32px;
+  text-align: center;
+}
+
+.task-status-badge.status-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.task-status-badge.status-in_progress {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.task-status-badge.status-completed {
+  background: #d1fae5;
+  color: #059669;
 }
 
 .task-checkbox {
@@ -224,10 +287,15 @@
   align-items: center;
   cursor: pointer;
   user-select: none;
+  position: relative;
 }
 
 .task-checkbox input {
-  display: none;
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
 }
 
 .checkmark {
@@ -239,6 +307,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  pointer-events: none;
 }
 
 .task-checkbox input:checked ~ .checkmark {
@@ -328,4 +397,33 @@
 
 .task-item:hover {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* My Tasks Button Container */
+.my-tasks-btn-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+/* Dashboard Button Container */
+.dashboard-btn-container {
+  display: flex;
+  justify-content: center;
+}
+
+.tasks-section-container {
+  margin-bottom: 40px;
+}
+
+.dashboard-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }

@@ -3,23 +3,39 @@ import config from '../config/index.js';
 
 /**
  * Middleware to protect routes - verifies JWT token
+ * Supports both cookie-based and Authorization header-based authentication
  */
 const auth = (req, res, next) => {
   try {
-    // Get token from header
-    const authHeader = req.header('Authorization');
+    // Get token - first check cookies, then fall back to Authorization header
+    let token = null;
     
-    if (!authHeader) {
-      return res.status(401).json({ message: 'No token, authorization denied' });
+    // Check for token in cookies
+    if (req.cookies && req.cookies[config.COOKIE_NAME]) {
+      token = req.cookies[config.COOKIE_NAME];
     }
     
-    // Check if it's a Bearer token
-    if (!authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Token format invalid' });
+    // If no cookie token, check Authorization header
+    if (!token) {
+      const authHeader = req.header('Authorization');
+      
+      if (authHeader) {
+        // Check if it's a Bearer token
+        if (authHeader.startsWith('Bearer ')) {
+          token = authHeader.replace('Bearer ', '');
+        } else {
+          // Use the header value directly as token (non-Bearer format)
+          token = authHeader;
+        }
+      }
     }
     
-    // Get token from Bearer string
-    const token = authHeader.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'No token, authorization denied' 
+      });
+    }
     
     const decoded = jwt.verify(token, config.JWT_SECRET);
     
@@ -28,7 +44,25 @@ const auth = (req, res, next) => {
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
-    res.status(401).json({ message: 'Token is not valid' });
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Token has expired' 
+      });
+    }
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Token is not valid' 
+      });
+    }
+    
+    res.status(401).json({ 
+      success: false,
+      message: 'Token is not valid' 
+    });
   }
 };
 
