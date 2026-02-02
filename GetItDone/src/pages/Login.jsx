@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import PasswordInput from '../components/PasswordInput';
 import './Login.css';
 
 function Login() {
@@ -13,6 +14,10 @@ function Login() {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
+  const [emailValidation, setEmailValidation] = useState({
+    isTouched: false,
+    isValid: false
+  });
 
   const navigate = useNavigate();
 
@@ -28,6 +33,16 @@ function Login() {
       setErrors(prev => ({
         ...prev,
         [name]: ''
+      }));
+    }
+
+    // Real-time email validation
+    if (name === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      setEmailValidation(prev => ({
+        ...prev,
+        isValid: emailRegex.test(value),
+        isTouched: value.length > 0
       }));
     }
   };
@@ -223,19 +238,32 @@ function Login() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              onBlur={(e) => {
+                setEmailValidation(prev => ({ ...prev, isTouched: true }));
+                // Trigger validation on blur
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.email)) {
+                  setErrors(prev => ({
+                    ...prev,
+                    email: 'Please enter a valid email address'
+                  }));
+                }
+              }}
               placeholder="Enter your email"
-              className={errors.email ? 'error' : ''}
+              className={`${errors.email ? 'error' : ''} ${emailValidation.isTouched && !errors.email ? (emailValidation.isValid ? 'valid' : 'invalid') : ''}`}
               disabled={isLoading}
             />
-            {/* //add validation to Login */}
-
+            {emailValidation.isTouched && !errors.email && (
+              <span className={`validation-indicator ${emailValidation.isValid ? 'valid' : 'invalid'}`}>
+                {emailValidation.isValid ? '✓' : '✗ Invalid email format'}
+              </span>
+            )}
             {errors.email && <span className="error-message">{errors.email}</span>}
           </div>
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
+            <PasswordInput
               id="password"
               name="password"
               value={formData.password}
@@ -243,6 +271,7 @@ function Login() {
               placeholder="Enter your password"
               className={errors.password ? 'error' : ''}
               disabled={isLoading}
+              error={!!errors.password}
             />
             {errors.password && <span className="error-message">{errors.password}</span>}
           </div>
@@ -250,8 +279,7 @@ function Login() {
           {!isLogin && (
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                type="password"
+              <PasswordInput
                 id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
@@ -259,6 +287,7 @@ function Login() {
                 placeholder="Confirm your password"
                 className={errors.confirmPassword ? 'error' : ''}
                 disabled={isLoading}
+                error={!!errors.confirmPassword}
               />
               {errors.confirmPassword && (
                 <span className="error-message">{errors.confirmPassword}</span>
@@ -273,7 +302,12 @@ function Login() {
           )}
 
           <button type="submit" className="submit-btn" disabled={isLoading}>
-            {isLoading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
+            {isLoading ? (
+              <>
+                <span className="button-spinner"></span>
+                Please wait...
+              </>
+            ) : (isLogin ? 'Sign In' : 'Create Account')}
           </button>
         </form>
 

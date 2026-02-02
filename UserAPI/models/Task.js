@@ -48,6 +48,9 @@ const taskSchema = new mongoose.Schema({
 taskSchema.index({ userId: 1, createdAt: -1 });
 taskSchema.index({ userId: 1, completed: 1 });
 
+// Compound unique index to prevent duplicate task names for the same user (case-insensitive)
+taskSchema.index({ userId: 1, title: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
+
 const Task = mongoose.model("tasks", taskSchema);
 
 export default Task;

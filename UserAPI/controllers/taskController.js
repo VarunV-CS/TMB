@@ -63,9 +63,21 @@ export const createTask = async (req, res) => {
       return res.status(400).json({ message: 'Task title is required' });
     }
     
+    const trimmedTitle = title.trim();
+    
+    // Check if a task with the same name already exists for this user
+    const existingTask = await Task.findOne({ 
+      userId: req.user.id, 
+      title: { $regex: new RegExp(`^${trimmedTitle}$`, 'i') }
+    });
+    
+    if (existingTask) {
+      return res.status(400).json({ message: 'A task with this name already exists' });
+    }
+    
     const task = new Task({
       userId: req.user.id,
-      title: title.trim(),
+      title: trimmedTitle,
       description: description ? description.trim() : '',
       priority: priority || 'medium',
       dueDate: dueDate || null
@@ -84,6 +96,10 @@ export const createTask = async (req, res) => {
     });
   } catch (error) {
     console.error('Create task error:', error);
+    // Handle duplicate key error (code 11000)
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'A task with this name already exists' });
+    }
     res.status(500).json({ message: 'Server error while creating task' });
   }
 };
@@ -122,6 +138,19 @@ export const updateTask = async (req, res) => {
       updateData.dueDate = dueDate;
     }
     
+    // If title is being updated, check for duplicates
+    if (updateData.title) {
+      const existingTask = await Task.findOne({
+        userId: req.user.id,
+        title: { $regex: new RegExp(`^${updateData.title}$`, 'i') },
+        _id: { $ne: req.params.id }
+      });
+      
+      if (existingTask) {
+        return res.status(400).json({ message: 'A task with this name already exists' });
+      }
+    }
+    
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
       updateData,
@@ -139,6 +168,10 @@ export const updateTask = async (req, res) => {
     });
   } catch (error) {
     console.error('Update task error:', error);
+    // Handle duplicate key error (code 11000)
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'A task with this name already exists' });
+    }
     res.status(500).json({ message: 'Server error while updating task' });
   }
 };

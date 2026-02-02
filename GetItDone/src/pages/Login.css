@@ -194,11 +194,11 @@
   .auth-card {
     padding: 40px 25px;
   }
-  
+
   .app-title {
     font-size: 1.8rem;
   }
-  
+
   .auth-title {
     font-size: 1.4rem;
   }
@@ -211,10 +211,101 @@
   transition: all 0.3s ease;
 }
 
+/* Password input wrapper styles */
+.form-group .password-input-wrapper input {
+  padding: 14px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  outline: none;
+  background: #f8f9fa;
+}
+
+.form-group .password-input-wrapper input:focus {
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.form-group .password-input-wrapper input.error {
+  border-color: #e74c3c;
+  background: #fff5f5;
+}
+
+.form-group .password-input-wrapper input.error:focus {
+  box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1);
+}
+
+.form-group .password-input-wrapper input::placeholder {
+  color: #aaa;
+}
+
 /* Focus visible for accessibility */
 .form-group input:focus-visible,
 .submit-btn:focus-visible,
 .toggle-btn:focus-visible {
   outline: 2px solid #667eea;
   outline-offset: 2px;
+}
+
+/* Email Validation Styles */
+.form-group input.valid {
+  border-color: #27ae60;
+  background: #f0fff4;
+}
+
+.form-group input.valid:focus {
+  box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
+}
+
+.form-group input.invalid {
+  border-color: #e74c3c;
+  background: #fff5f5;
+}
+
+.form-group input.invalid:focus {
+  box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1);
+}
+
+.validation-indicator {
+  font-size: 0.85rem;
+  margin-left: 4px;
+  margin-top: -4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: fadeIn 0.3s ease;
+}
+
+.validation-indicator.valid {
+  color: #27ae60;
+}
+
+.validation-indicator.invalid {
+  color: #e74c3c;
+}
+
+/* Button Spinner */
+.button-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

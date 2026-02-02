@@ -1,6 +1,8 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
+import ErrorBoundary from './components/ErrorBoundary';
+import './App.css';
 
 // Lazy load components for better performance
 const Login = lazy(() => import('./pages/Login'));
@@ -19,21 +21,23 @@ function Loading() {
 function App() {
   return (
     <Router>
-      <Suspense fallback={<Loading />}>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            } 
-          />
-          {/* Redirect unknown routes to login */}
-          <Route path="*" element={<Login />} />
-        </Routes>
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<Loading />}>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              } 
+            />
+            {/* Redirect unknown routes to login */}
+            <Route path="*" element={<Login />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </Router>
   );
 }

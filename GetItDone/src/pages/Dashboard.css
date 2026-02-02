@@ -152,8 +152,15 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
+.tasks-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .tasks-header {
-  margin-bottom: 25px;
+  margin-bottom: 0;
 }
 
 .tasks-header h3 {
@@ -409,7 +416,7 @@
 /* Dashboard Button Container */
 .dashboard-btn-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 .tasks-section-container {
@@ -426,4 +433,394 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+}
+
+/* Priority Selector in Add Task Form */
+.priority-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.priority-label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.priority-select {
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+  background: white;
+  transition: border-color 0.3s ease;
+  min-width: 120px;
+}
+
+.priority-select:focus {
+  border-color: #667eea;
+}
+
+.priority-select option[value="high"] {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.priority-select option[value="medium"] {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.priority-select option[value="low"] {
+  background: #d1fae5;
+  color: #059669;
+}
+
+/* Task Priority Badge */
+.task-priority-badge {
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  min-width: 70px;
+  text-align: center;
+}
+
+.task-priority-badge:hover {
+  transform: scale(1.05);
+}
+
+.task-priority-badge.priority-high {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 2px solid #fca5a5;
+}
+
+.task-priority-badge.priority-medium {
+  background: #fef3c7;
+  color: #d97706;
+  border: 2px solid #fcd34d;
+}
+
+.task-priority-badge.priority-low {
+  background: #d1fae5;
+  color: #059669;
+  border: 2px solid #6ee7b7;
+}
+
+/* Priority indicator dot */
+.priority-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.priority-dot.high {
+  background: #dc2626;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.5);
+}
+
+.priority-dot.medium {
+  background: #d97706;
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.5);
+}
+
+.priority-dot.low {
+  background: #059669;
+  box-shadow: 0 0 8px rgba(5, 150, 105, 0.5);
+}
+
+/* Inline Priority Select for Task Items */
+.task-priority-select {
+  padding: 6px 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  background: white;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.task-priority-select:focus {
+  border-color: #667eea;
+}
+
+.task-priority-select:hover {
+  transform: scale(1.02);
+}
+
+.task-priority-select option {
+  font-weight: 600;
+  padding: 10px;
+}
+
+.task-priority-select.priority-high {
+  border-color: #fca5a5;
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+.task-priority-select.priority-medium {
+  border-color: #fcd34d;
+  color: #d97706;
+  background: #fef3c7;
+}
+
+.task-priority-select.priority-low {
+  border-color: #6ee7b7;
+  color: #059669;
+  background: #d1fae5;
+}
+
+/* Disabled state for completed tasks */
+.task-priority-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.task-priority-select:disabled.priority-high {
+  background: #fee2e2;
+}
+
+.task-priority-select:disabled.priority-medium {
+  background: #fef3c7;
+}
+
+.task-priority-select:disabled.priority-low {
+  background: #d1fae5;
+}
+
+/* Due Date Styles */
+.due-date-input {
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+  background: white;
+  transition: border-color 0.3s ease;
+  min-width: 150px;
+}
+
+.due-date-input:focus {
+  border-color: #667eea;
+}
+
+.due-date-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.due-date-label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.due-date-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Task Due Date Display */
+.task-due-date {
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-due-date:hover {
+  transform: scale(1.02);
+}
+
+.task-due-date.overdue {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 2px solid #fca5a5;
+}
+
+.task-due-date.overdue .due-icon {
+  color: #dc2626;
+}
+
+.task-due-date.upcoming {
+  background: #fef3c7;
+  color: #d97706;
+  border: 2px solid #fcd34d;
+}
+
+.task-due-date.upcoming .due-icon {
+  color: #d97706;
+}
+
+.task-due-date.completed {
+  background: #d1fae5;
+  color: #059669;
+  border: 2px solid #6ee7b7;
+}
+
+.task-due-date.completed .due-icon {
+  color: #059669;
+}
+
+.task-due-date.none {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+}
+
+.due-icon {
+  font-size: 0.9rem;
+}
+
+/* Due date inline edit */
+.task-due-date-edit {
+  padding: 6px 10px;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  background: white;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.task-due-date-edit:focus {
+  border-color: #764ba2;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Overdue task highlighting */
+.task-item.overdue {
+  background: linear-gradient(135deg, #fee2e2 0%, #fef3c7 100%);
+  border-left: 4px solid #dc2626;
+}
+
+.task-item.overdue:hover {
+  box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2);
+}
+
+/* Task item with due date */
+.task-item.has-due-date {
+  position: relative;
+}
+
+/* Due date filter styles */
+.due-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.due-date-filter-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.due-date-filter-select {
+  padding: 10px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+  background: white;
+  transition: border-color 0.3s ease;
+}
+
+.due-date-filter-select:focus {
+  border-color: #667eea;
+}
+
+/* Due date badge in header */
+.due-date-badge {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 5px;
+}
+
+.due-date-badge.overdue {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.due-date-badge.today {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* Sort by due date button */
+.sort-due-date-btn {
+  background: white;
+  border: 2px solid #e0e0e0;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sort-due-date-btn:hover {
+  border-color: #667eea;
+  background: #f5f7fa;
+}
+
+.sort-due-date-btn.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+/* Overdue Stat Card */
+.overdue-stat-card {
+  border-color: #dc2626;
+}
+
+.overdue-stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2);
+}
+
+.overdue-number {
+  color: #dc2626;
+}
+
+/* Pie Charts Section Grid */
+.piecharts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
 }
