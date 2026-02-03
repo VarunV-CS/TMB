@@ -15,7 +15,7 @@ const config = {
   COOKIE_SAME_SITE: process.env.COOKIE_SAME_SITE || 'lax',
 
   // Rate Limiting Configuration
-  RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS || (15 * 60 * 1000), // 15 minutes
+  RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || (15 * 60 * 1000), // 15 minutes
   RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
   RATE_LIMIT_AUTH_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_AUTH_MAX_REQUESTS) || 10,
 

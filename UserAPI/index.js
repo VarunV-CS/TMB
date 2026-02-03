@@ -12,44 +12,11 @@ import taskRoutes from './routes/taskRoutes.js';
 // Initialize express app
 const app = express();
 
+// Trust proxy configuration for proper IP detection behind proxies (e.g., nginx, load balancers)
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
-
-// ============== Rate Limiting ==============
-//incomplete code
-// General rate limiter - applies to all routes
-const generalLimiter = rateLimit({
-  windowMs: config.RATE_LIMIT_WINDOW_MS,
-  max: config.RATE_LIMIT_MAX_REQUESTS,
-  message: {
-    success: false,
-    message: 'Too many requests, please try again later.'
-  },
-  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
-  legacyHeaders: false, // Disable `X-RateLimit-*` headers
-  keyGenerator: (req) => {
-    // Use IP address for rate limiting
-    return req.ip || req.connection.remoteAddress;
-  }
-});
-
-// Auth rate limiter - stricter limits for authentication routes
-const authLimiter = rateLimit({
-  windowMs: config.RATE_LIMIT_WINDOW_MS,
-  max: config.RATE_LIMIT_AUTH_MAX_REQUESTS,
-  message: {
-    success: false,
-    message: 'Too many authentication attempts, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.ip || req.connection.remoteAddress;
-  }
-});
-// update packages and generate the rate limit tokens
-// Apply general rate limiter to all routes
-app.use(generalLimiter);
 
 // ============== Middleware ==============
 
@@ -86,9 +53,47 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// ============== Rate Limiting ==============
+// General rate limiter - applies to all routes
+const generalLimiter = rateLimit({
+  windowMs: config.RATE_LIMIT_WINDOW_MS,
+  limit: config.RATE_LIMIT_MAX_REQUESTS,
+  message: {
+    success: false,
+    message: 'Too many requests, please try again later.'
+  },
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  ipv6Subnet: 64, // IPv6 subnet mask for proper rate limiting
+  skip: (req) => {
+    // Skip rate limiting for health check endpoint
+    return req.path === '/health';
+  }
+});
+
+// Auth rate limiter - stricter limits for authentication routes
+const authLimiter = rateLimit({
+  windowMs: config.RATE_LIMIT_WINDOW_MS,
+  limit: config.RATE_LIMIT_AUTH_MAX_REQUESTS,
+  message: {
+    success: false,
+    message: 'Too many authentication attempts, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  ipv6Subnet: 64, // IPv6 subnet mask for proper rate limiting
+  skip: (req) => {
+    // Skip rate limiting for health check endpoint
+    return req.path === '/health';
+  }
+});
+
+// Apply rate limiter middleware AFTER CORS to ensure proper headers
+app.use(generalLimiter);
+
 // ============== Routes ==============
 
-// Apply stricter rate limiter to auth routes
+// Apply stricter rate limiter to auth routes (specific route-level application)
 app.use('/api/users/login', authLimiter);
 app.use('/api/users/register', authLimiter);
 
