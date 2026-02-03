@@ -41,9 +41,30 @@ const userSchema = new mongoose.Schema(
     }
   },
   {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+// Virtual for populating user's tasks (Method 1: Virtual Population)
+userSchema.virtual('tasks', {
+  ref: 'tasks',
+  localField: '_id',
+  foreignField: 'userId',
+  justOne: false
+});
+
+// Virtual for task count
+userSchema.virtual('taskCount', {
+  ref: 'tasks',
+  localField: '_id',
+  foreignField: 'userId',
+  count: true
+});
+
+// Index for virtual population performance
+userSchema.index({ createdAt: -1 });
 
 const User = mongoose.model("users", userSchema);
 

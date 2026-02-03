@@ -41,7 +41,28 @@ const taskSchema = new mongoose.Schema({
     default: Date.now
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual for populated user information (Method 1: Virtual Population)
+taskSchema.virtual('createdBy', {
+  ref: 'users',
+  localField: 'userId',
+  foreignField: '_id',
+  justOne: true
+});
+
+// Virtual for formatted status
+taskSchema.virtual('statusFormatted').get(function() {
+  return this.status.replace('_', ' ');
+});
+
+// Virtual for is overdue
+taskSchema.virtual('isOverdue').get(function() {
+  if (!this.dueDate) return false;
+  return new Date(this.dueDate) < new Date() && this.status !== 'completed';
 });
 
 // Compound index for efficient user-task queries

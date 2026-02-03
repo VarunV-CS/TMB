@@ -300,6 +300,183 @@ export const getTaskStats = async (req, res) => {
   }
 };
 
+// V2 ENDPOINTS - With Virtual Population
+// GET all tasks with populated user details (Method 1: Virtual Population)
+export const getTasksV2 = async (req, res) => {
+  try {
+    const { status, priority, search, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+
+    // Build query filter
+    const filter = { userId: req.user.id };
+
+    if (status !== undefined) {
+      filter.status = status;
+    }
+
+    if (priority) {
+      filter.priority = priority;
+    }
+
+    if (search) {
+      filter.title = { $regex: search, $options: 'i' };
+    }
+
+    // Build sort object
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    // V2: With virtual population - includes createdBy user details
+    const tasks = await Task.find(filter)
+      .sort(sortOptions)
+      .populate('createdBy', 'Username Email role');
+
+    res.json({
+      version: 'v2',
+      count: tasks.length,
+      tasks
+    });
+  } catch (error) {
+    console.error('Get tasks v2 error:', error);
+    res.status(500).json({ message: 'Server error while fetching tasks' });
+  }
+};
+
+// GET single task with populated user (V2)
+export const getTaskByIdV2 = async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      userId: req.user.id
+    }).populate('createdBy', 'Username Email role');
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    res.json({
+      version: 'v2',
+      task
+    });
+  } catch (error) {
+    console.error('Get task by ID v2 error:', error);
+    res.status(500).json({ message: 'Server error while fetching task' });
+  }
+};
+
+// GET all tasks for a specific user with populate (V2)
+export const getUserTasksV2 = async (req, res) => {
+  try {
+    const targetUserId = req.params.userId || req.user.id;
+
+    // Get user info
+    const user = await User.findById(targetUserId).select('-password -token');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get all tasks for this user with populate
+    const tasks = await Task.find({ userId: targetUserId })
+      .sort({ createdAt: -1 })
+      .populate('createdBy', 'Username Email role');
+
+    // Calculate stats
+    const stats = {
+      total: tasks.length,
+      pending: tasks.filter(t => t.status === 'pending').length,
+      inProgress: tasks.filter(t => t.status === 'in_progress').length,
+      completed: tasks.filter(t => t.status === 'completed').length,
+      highPriority: tasks.filter(t => t.priority === 'high').length,
+      mediumPriority: tasks.filter(t => t.priority === 'medium').length,
+      lowPriority: tasks.filter(t => t.priority === 'low').length
+    };
+
+    res.json({
+      version: 'v2',
+      user: {
+        id: user._id,
+        Username: user.Username,
+        Email: user.Email,
+        role: user.role,
+        createdAt: user.createdAt
+      },
+      tasks,
+      stats,
+      meta: {
+        populatedFields: ['createdBy'],
+        virtuals: ['statusFormatted', 'isOverdue']
+      }
+    });
+  } catch (error) {
+    console.error('Get user tasks v2 error:', error);
+    res.status(500).json({ message: 'Server error while fetching user tasks' });
+  }
+};
+
+// GET tasks with virtual population and aggregation (V2)
+export const getTasksWithStatsV2 = async (req, res) => {
+  try {
+    const { status, priority, search, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+
+    // Build query filter
+    const filter = { userId: req.user.id };
+
+    if (status !== undefined) {
+      filter.status = status;
+    }
+
+    if (priority) {
+      filter.priority = priority;
+    }
+
+    if (search) {
+      filter.title = { $regex: search, $options: 'i' };
+    }
+
+    // Build sort object
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    // Get tasks with populate
+    const tasks = await Task.find(filter)
+      .sort(sortOptions)
+      .populate('createdBy', 'Username Email role');
+
+    // Calculate stats
+    const stats = {
+      total: tasks.length,
+      pending: tasks.filter(t => t.status === 'pending').length,
+      inProgress: tasks.filter(t => t.status === 'in_progress').length,
+      completed: tasks.filter(t => t.status === 'completed').length,
+      highPriority: tasks.filter(t => t.priority === 'high').length,
+      mediumPriority: tasks.filter(t => t.priority === 'medium').length,
+      lowPriority: tasks.filter(t => t.priority === 'low').length,
+      overdue: tasks.filter(t => t.isOverdue).length
+    };
+
+    // Add virtual field information
+    const tasksWithVirtuals = tasks.map(task => ({
+      ...task.toObject(),
+      statusFormatted: task.status.replace('_', ' '),
+      isOverdue: task.isOverdue
+    }));
+
+    res.json({
+      version: 'v2',
+      count: tasks.length,
+      stats,
+      tasks: tasksWithVirtuals,
+      meta: {
+        populatedFields: ['createdBy'],
+        virtuals: ['statusFormatted', 'isOverdue', 'createdBy']
+      }
+    });
+  } catch (error) {
+    console.error('Get tasks with stats v2 error:', error);
+    res.status(500).json({ message: 'Server error while fetching tasks' });
+  }
+};
+
 export default {
   getTasks,
   getTaskById,
@@ -307,5 +484,10 @@ export default {
   updateTask,
   deleteTask,
   replaceTasks,
-  getTaskStats
+  getTaskStats,
+  // V2 endpoints
+  getTasksV2,
+  getTaskByIdV2,
+  getUserTasksV2,
+  getTasksWithStatsV2
 };
