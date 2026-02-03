@@ -73,23 +73,25 @@
 .dashboard-main {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 20px 20px;
 }
 
 .welcome-section {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
+  padding: 10px 0;
 }
 
 .welcome-section h2 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .welcome-section p {
   color: #666;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  margin: 0;
 }
 
 .stats-section {
@@ -822,5 +824,90 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 25px;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
+}
+
+/* Task Title */
+.task-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  font-size: 1.05rem;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.task-title.completed {
+  text-decoration: line-through;
+  color: #888;
+}
+
+/* Inline Edit Title Button (next to title) */
+.edit-title-btn-inline {
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  padding: 2px;
+  line-height: 1;
+}
+
+.task-title:hover .edit-title-btn-inline {
+  opacity: 0.5;
+}
+
+.edit-title-btn-inline:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+/* Edit Title Button (standalone) */
+.edit-title-btn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.task-item:hover .edit-title-btn {
+  opacity: 1;
+}
+
+.edit-title-btn:hover {
+  transform: scale(1.1);
+  background: #f0f2f5;
+}
+
+/* Title Edit Container */
+.title-edit-container {
+  flex: 1;
+}
+
+/* Task Title Edit Input */
+.task-title-edit {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.task-title-edit:focus {
+  border-color: #764ba2;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.task-title-edit::placeholder {
+  color: #999;
 }

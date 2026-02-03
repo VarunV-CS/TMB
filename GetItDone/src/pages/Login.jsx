@@ -18,6 +18,10 @@ function Login() {
     isTouched: false,
     isValid: false
   });
+  const [confirmPasswordValidation, setConfirmPasswordValidation] = useState({
+    isTouched: false,
+    isValid: false
+  });
 
   const navigate = useNavigate();
 
@@ -43,6 +47,23 @@ function Login() {
         ...prev,
         isValid: emailRegex.test(value),
         isTouched: value.length > 0
+      }));
+    }
+    
+    // Real-time confirm password validation
+    if (name === 'confirmPassword') {
+      setConfirmPasswordValidation(prev => ({
+        ...prev,
+        isTouched: value.length > 0,
+        isValid: value === formData.password && value.length > 0
+      }));
+    }
+    
+    // Update confirm password validation when password changes
+    if (name === 'password' && confirmPasswordValidation.isTouched) {
+      setConfirmPasswordValidation(prev => ({
+        ...prev,
+        isValid: value === formData.confirmPassword && value.length > 0
       }));
     }
   };
@@ -284,11 +305,26 @@ function Login() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                onBlur={() => {
+                  setConfirmPasswordValidation(prev => ({ ...prev, isTouched: true }));
+                  // Trigger validation on blur
+                  if (formData.password !== formData.confirmPassword) {
+                    setErrors(prev => ({
+                      ...prev,
+                      confirmPassword: 'Passwords do not match'
+                    }));
+                  }
+                }}
                 placeholder="Confirm your password"
-                className={errors.confirmPassword ? 'error' : ''}
+                className={`${errors.confirmPassword ? 'error' : ''} ${confirmPasswordValidation.isTouched && !errors.confirmPassword ? (confirmPasswordValidation.isValid ? 'valid' : 'invalid') : ''}`}
                 disabled={isLoading}
                 error={!!errors.confirmPassword}
               />
+              {confirmPasswordValidation.isTouched && !errors.confirmPassword && (
+                <span className={`validation-indicator ${confirmPasswordValidation.isValid ? 'valid' : 'invalid'}`}>
+                  {confirmPasswordValidation.isValid ? '✓ Passwords match' : '✗ Passwords do not match'}
+                </span>
+              )}
               {errors.confirmPassword && (
                 <span className="error-message">{errors.confirmPassword}</span>
               )}

@@ -18,6 +18,8 @@ function Dashboard() {
   const [dueDateFilter, setDueDateFilter] = useState('all'); // 'all', 'overdue', 'upcoming', 'none'
   const [sortByDueDate, setSortByDueDate] = useState(false); // Sort by due date
   const [editingDueDate, setEditingDueDate] = useState(null); // Track which task is being edited for due date
+  const [editingTitle, setEditingTitle] = useState(null); // Track which task is being edited for title
+  const [editingTitleValue, setEditingTitleValue] = useState(''); // Value for title edit input
 
   // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -95,11 +97,11 @@ function Dashboard() {
 
   // Get due date icon
   const getDueDateIcon = useCallback((task) => {
-    if (!task.dueDate) return '📅';
+    if (!task.dueDate) return '🗓️';
     if (task.status === 'completed') return '✅';
     if (isOverdue(task)) return '⚠️';
     if (isDueToday(task)) return '⏰';
-    return '📅';
+    return '🗓️';
   }, [isOverdue, isDueToday]);
 
   // Fetch user data and tasks from API on mount
@@ -431,6 +433,84 @@ function Dashboard() {
     setEditingDueDate(null);
   }, []);
 
+  // Start editing title for a task
+  const startEditingTitle = useCallback((id, currentTitle, e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setEditingTitle(id);
+    setEditingTitleValue(currentTitle);
+  }, []);
+
+  // Save edited title for a task
+  const saveTitle = async (id, e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    const trimmedTitle = editingTitleValue.trim();
+    
+    if (!trimmedTitle) {
+      showSnackbar('Task title cannot be empty', 'error');
+      return;
+    }
+
+    try {
+      const task = tasks.find(t => t.id === id);
+      if (!task) {
+        console.error('Task not found:', id);
+        return;
+      }
+
+      // Check for duplicate title (case-insensitive)
+      if (trimmedTitle.toLowerCase() !== task.title.toLowerCase()) {
+        const duplicateTask = tasks.find(
+          t => t.id !== id && t.title.toLowerCase() === trimmedTitle.toLowerCase()
+        );
+        
+        if (duplicateTask) {
+          showSnackbar('A task with this name already exists', 'error');
+          return;
+        }
+      }
+
+      console.log('Saving task title:', id, 'from', task.title, 'to', trimmedTitle);
+
+      // Optimistic update - immediately update UI
+      setTasks(prevTasks => 
+        prevTasks.map(t => 
+          t.id === id ? { ...t, title: trimmedTitle, updatedAt: new Date() } : t
+        )
+      );
+
+      // Sync with backend
+      await api.updateTask(id, { title: trimmedTitle });
+      
+      showSnackbar('Task title updated successfully', 'success');
+      
+      // Stop editing
+      setEditingTitle(null);
+      setEditingTitleValue('');
+    } catch (error) {
+      console.error('Error updating task title:', error);
+      showSnackbar('Failed to update task title: ' + (error.message || 'Unknown error'), 'error');
+      // Revert on error by refetching
+      fetchTasks();
+    }
+  };
+
+  // Cancel editing title
+  const cancelEditingTitle = useCallback((e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setEditingTitle(null);
+    setEditingTitleValue('');
+  }, []);
+
   const handleNewTaskChange = useCallback((e) => {
     setNewTask(e.target.value);
   }, []);
@@ -588,7 +668,7 @@ function Dashboard() {
           onClick={() => setSortByDueDate(!sortByDueDate)}
           title={sortByDueDate ? 'Disable sorting by due date' : 'Enable sorting by due date'}
         >
-          {sortByDueDate ? '📅' : '📅'} Sort by Due Date
+          {sortByDueDate ? '🗓️' : '🗓️'} Sort by Due Date
         </button>
       </div>
 
@@ -639,7 +719,7 @@ function Dashboard() {
                 key={task.id} 
                 className={`task-item task-${task.status} ${isOverdue(task) ? 'overdue' : ''} ${task.dueDate ? 'has-due-date' : ''}`}
                 onClick={(e) => {
-                  if (!e.target.closest('.task-checkbox') && !e.target.closest('.delete-task-btn') && !e.target.closest('.task-priority-select') && !e.target.closest('.task-due-date') && !e.target.closest('.task-due-date-edit') && !e.target.closest('.due-date-edit-container')) {
+                  if (!e.target.closest('.task-checkbox') && !e.target.closest('.delete-task-btn') && !e.target.closest('.task-priority-select') && !e.target.closest('.task-due-date') && !e.target.closest('.task-due-date-edit') && !e.target.closest('.due-date-edit-container') && !e.target.closest('.title-edit-container') && !e.target.closest('.task-title-container') && !e.target.closest('.edit-title-btn')) {
                     handleToggleTask(task.id, e);
                   }
                 }}
@@ -655,7 +735,42 @@ function Dashboard() {
                   />
                   <span className="checkmark"></span>
                 </label>
-                <span className="task-title" onClick={(e) => e.stopPropagation()}>{task.title}</span>
+                {/* Task Title Display/Edit */}
+                {editingTitle === task.id ? (
+                  <div className="title-edit-container" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      className="task-title-edit"
+                      value={editingTitleValue}
+                      onChange={(e) => setEditingTitleValue(e.target.value)}
+                      onBlur={() => saveTitle(task.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveTitle(task.id);
+                        } else if (e.key === 'Escape') {
+                          cancelEditingTitle();
+                        }
+                      }}
+                      autoFocus
+                    />
+                  </div>
+                ) : (
+                  <span 
+                    className={`task-title ${task.status === 'completed' ? 'completed' : ''}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {task.title}
+                    <button 
+                      className="edit-title-btn-inline"
+                      onClick={(e) => startEditingTitle(task.id, task.title, e)}
+                      title={task.status === 'completed' ? 'Cannot edit title of completed tasks' : 'Edit task title'}
+                      disabled={isSyncing || task.status === 'completed'}
+                      style={{ opacity: task.status === 'completed' ? 0.2 : undefined, cursor: task.status === 'completed' ? 'not-allowed' : 'pointer' }}
+                    >
+                      ✏️
+                    </button>
+                  </span>
+                )}
                 <select
                   className={`task-priority-select priority-${task.priority || 'medium'}`}
                   value={task.priority || 'medium'}
@@ -698,7 +813,7 @@ function Dashboard() {
                     style={{ cursor: task.status === 'completed' ? 'default' : 'pointer' }}
                   >
                     <span className="due-icon">{getDueDateIcon(task)}</span>
-                    <span>{task.dueDate ? formatDate(task.dueDate) : '📅 Set due'}</span>
+                    <span>{task.dueDate ? formatDate(task.dueDate) : '�️ Set due'}</span>
                   </div>
                 )}
                 <button 

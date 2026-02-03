@@ -16,7 +16,7 @@ const app = express();
 connectDB();
 
 // ============== Rate Limiting ==============
-
+//incomplete code
 // General rate limiter - applies to all routes
 const generalLimiter = rateLimit({
   windowMs: config.RATE_LIMIT_WINDOW_MS,
@@ -47,7 +47,7 @@ const authLimiter = rateLimit({
     return req.ip || req.connection.remoteAddress;
   }
 });
-
+// update packages and generate the rate limit tokens
 // Apply general rate limiter to all routes
 app.use(generalLimiter);
 

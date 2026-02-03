@@ -1,4 +1,6 @@
 import Task from "../models/Task.js";
+import User from "../models/User.js";
+import { sendTaskCreatedEmail } from "../services/emailService.js";
 
 // GET all tasks for the authenticated user
 export const getTasks = async (req, res) => {
@@ -82,13 +84,24 @@ export const createTask = async (req, res) => {
       priority: priority || 'medium',
       dueDate: dueDate || null
     });
-    
+
     await task.save();
-    
-    // Return task without userId
+
+    // Prepare response task without userId
     const responseTask = task.toObject();
     delete responseTask.userId;
-    
+
+    // Send email notification to user (non-blocking)
+    try {
+      const user = await User.findById(req.user.id);
+      if (user && user.Email) {
+        sendTaskCreatedEmail(user, responseTask);
+      }
+    } catch (emailError) {
+      // Log but don't fail - email is non-blocking
+      console.error('Failed to send task notification email:', emailError.message);
+    }
+
     res.status(201).json({
       success: true,
       task: responseTask,

@@ -286,6 +286,45 @@
   color: #e74c3c;
 }
 
+/* Password Match Validation Styles */
+.form-group input.password-match {
+  border-color: #27ae60;
+  background: #f0fff4;
+}
+
+.form-group input.password-mismatch {
+  border-color: #e74c3c;
+  background: #fff5f5;
+}
+
+.form-group .password-input-wrapper input.password-match {
+  border-color: #27ae60;
+  background: #f0fff4;
+}
+
+.form-group .password-input-wrapper input.password-mismatch {
+  border-color: #e74c3c;
+  background: #fff5f5;
+}
+
+.password-match-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  margin-left: 4px;
+  margin-top: 4px;
+  animation: fadeIn 0.3s ease;
+}
+
+.password-match-indicator.match {
+  color: #27ae60;
+}
+
+.password-match-indicator.mismatch {
+  color: #e74c3c;
+}
+
 /* Button Spinner */
 .button-spinner {
   width: 16px;
