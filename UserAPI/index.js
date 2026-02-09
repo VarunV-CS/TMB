@@ -48,7 +48,9 @@ const corsOptions = {
   maxAge: 86400 // 24 hours
 };
 
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: process.env.FRONTEND_URL // Allow requests from this URL(Render deployment URL)
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());

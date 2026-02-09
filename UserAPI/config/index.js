@@ -24,7 +24,10 @@ const config = {
   EMAIL_PORT: parseInt(process.env.EMAIL_PORT) || 587,
   EMAIL_SECURE: process.env.EMAIL_SECURE === 'true',
   EMAIL_USER: process.env.EMAIL_USER,
-  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD
+  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
+
+  //Deployment Configuration on Render
+  FRONTEND_URL: process.env.FRONTEND_URL || 'https://getitdone-m79r.onrender.com'
 };
 
 export default config;
