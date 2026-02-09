@@ -3,9 +3,9 @@ import config from "./index.js";
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(
-      config.MONGODB_URL
-    );
+    await mongoose.connect(config.MONGODB_URL)
+    .then(() => console.log('Connected to MongoDB Atlas on Render!'))
+  .catch(err => console.error('Connection error:', err));
     console.log("MongoDB Connected...");
   } catch (error) {
     console.error("MongoDB Connection Error:", error.message);
