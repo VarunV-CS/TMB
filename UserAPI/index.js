@@ -128,7 +128,7 @@ app.use((req, res) => {
 
 // Start server
 const PORT = config.PORT;
-app.listen(PORT, () => {
+app.listen(PORT,'0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Rate limiting: ${config.RATE_LIMIT_MAX_REQUESTS} requests per ${config.RATE_LIMIT_WINDOW_MS / 60000} minutes`);
   console.log(`Auth rate limiting: ${config.RATE_LIMIT_AUTH_MAX_REQUESTS} requests per ${config.RATE_LIMIT_WINDOW_MS / 60000} minutes`);
